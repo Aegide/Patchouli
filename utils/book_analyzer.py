@@ -1,19 +1,34 @@
 import json
 import re
 
-from pkg_resources import WorkingSet
+outer_path = "C:/Github/Botania/Common/src/main/resources/assets/botania"
 
 
 
+chapter = "functional_flowers"
+entry = "orechid_ignem"
 
 
-
+# where all the actual text is
 path_file_lang = "C:/Github/Botania/Common/src/main/resources/assets/botania/lang/fr_fr.json"
-path_file_entry = "C:/Github/Botania/Common/src/main/resources/assets/botania/patchouli_books/lexicon/en_us/entries/functional_flowers/orechid_ignem.json"
+
+# full of links
+path_file_entry = f"{outer_path}/patchouli_books/lexicon/en_us/entries/{chapter}/{entry}.json"
+
+
+
 
 
 
 max_line_score = 464
+space_score = 16
+
+value16 = "abcdeghkmnopqrsuvwxyzéèêàüûILCN"
+value14 = "t"
+value4 = "'"
+value8 = "."
+#value12 = "fijlt"
+
 
 
 def clean_entry(raw_entry):
@@ -45,10 +60,46 @@ def get_word_list_from_entry(clean_entry:str):
 
 
 def handle_word_list(word_list:list[str]):
-    for word in word_list:
-        word_score = get_word_score(word)
-        print(word_score, word)
 
+    is_loud = True
+
+    line = ""
+    line_score = 0
+    line_count = 1
+
+    for word in word_list:
+        word_score = get_word_score(word) 
+        # print(">>>", word_score, word)
+
+        if word == "$(p)":
+            if is_loud:
+                print(line_count, ":", line_score, ")", line)
+
+            line = ""
+            line_score = 0
+            line_count += 1
+            if is_loud:
+                print(line_count, ":", line_score, ")", line)
+
+            line = ""
+            line_score = 0
+            line_count += 1
+
+        else:
+            
+            if word_score + line_score < max_line_score:
+                line += word + " "
+                line_score += word_score + space_score
+
+            else:
+                if is_loud:
+                    print(line_count, ":", line_score, ")", line)
+                line = word + " "
+                line_score = word_score + space_score
+                line_count += 1
+
+    if is_loud:
+        print(line_count, ":", line_score, ")", line)
 
 
 def get_word_score(word:str):
@@ -56,6 +107,12 @@ def get_word_score(word:str):
     for letter in word:
         if letter in value16:
             word_score += 16
+        elif letter in value14:
+            word_score += 14
+        elif letter in value8:
+            word_score += 8
+        elif letter in value4:
+            word_score += 4
         else:
             word_score += 12
     return word_score
@@ -63,36 +120,6 @@ def get_word_score(word:str):
 
 
 
-value16 = "abcdeghkmnopqrsuvwxyz"
-value12 = "fijlt"
-
-some_entry = "Le jasminerai est limité dans ce qu'il peut créer. Il ne peut rien produire qui viens du Nether. Ce qui est facile à régler, en changeant un peu la recette.$(p)Le jasminerai ardent utilise du mana pour synthétiser des minerais du Nether à partir de la netherrack. Cette fleur fonctionne uniquement dans le Nether."
-
-print(" ")
-
-
-
-
-
-
-
-"""
-for char in entry:
-
-
-    char_score = 12 if char in value12 else 16
-
-    if char_score + line_score < max_line_score:
-        line += char 
-        line_score += char_score
-    else:
-        print(">>>", line_score, line)
-        line_score = char_score
-        line = char
-
-
-print(">", line_score, line)
-"""
 
 
 
@@ -115,6 +142,9 @@ with open(path_file_lang, 'rb') as file_lang:
                 results = re.search(pattern, content_lang)
                 entry = "".join(results[0].split(":")[1:])
                 entry = clean_entry(entry)
+
+                # entry = "créer. Il ne peut rien"
+
                 print(entry, "\n")
 
                 word_list = get_word_list_from_entry(entry)
@@ -161,3 +191,11 @@ with open(path_file_lang, 'rb') as file_lang:
 
 
 
+"""
+
+
+some_entry = "Le jasminerai est limité dans ce qu'il peut créer. Il ne peut rien produire qui viens du Nether. Ce qui est facile à régler, en changeant un peu la recette.$(p)Le jasminerai ardent utilise du mana pour synthétiser des minerais du Nether à partir de la netherrack. Cette fleur fonctionne uniquement dans le Nether."
+
+print(" ")
+
+"""
