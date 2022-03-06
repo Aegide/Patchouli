@@ -1,6 +1,8 @@
 import json
 import re
 
+from pkg_resources import WorkingSet
+
 
 
 
@@ -16,8 +18,47 @@ max_line_score = 464
 
 def clean_entry(raw_entry):
     clean_entry = re.sub(r"\$\([^p]*?\)", "", raw_entry)
-    return clean_entry
+    return clean_entry[2:-2] # removes the double-quotes
 
+
+def get_word_list_from_entry(clean_entry:str):
+
+    word_list = clean_entry.split(" ")
+    new_word_list = []
+
+    for word in word_list:
+
+        values = word.split("$(p)")
+
+        if len(values) == 2:
+            values = [values[0], "$(p)", values[1]]
+        
+        elif len(values) != 1:
+            print("ERROR", word, values)
+
+        # print(element, values)
+
+        for value in values:
+            new_word_list.append(value)
+
+    return new_word_list
+
+
+def handle_word_list(word_list:list[str]):
+    for word in word_list:
+        word_score = get_word_score(word)
+        print(word_score, word)
+
+
+
+def get_word_score(word:str):
+    word_score = 0
+    for letter in word:
+        if letter in value16:
+            word_score += 16
+        else:
+            word_score += 12
+    return word_score
 
 
 
@@ -25,11 +66,14 @@ def clean_entry(raw_entry):
 value16 = "abcdeghkmnopqrsuvwxyz"
 value12 = "fijlt"
 
-entry = "Le jasminerai est limité dans ce qu'il peut créer. Il ne peut rien produire qui viens du Nether. Ce qui est facile à régler, en changeant un peu la recette.$(p)Le jasminerai ardent utilise du mana pour synthétiser des minerais du Nether à partir de la netherrack. Cette fleur fonctionne uniquement dans le Nether."
+some_entry = "Le jasminerai est limité dans ce qu'il peut créer. Il ne peut rien produire qui viens du Nether. Ce qui est facile à régler, en changeant un peu la recette.$(p)Le jasminerai ardent utilise du mana pour synthétiser des minerais du Nether à partir de la netherrack. Cette fleur fonctionne uniquement dans le Nether."
+
+print(" ")
 
 
-line_score = 0
-line = ""
+
+
+
 
 
 """
@@ -52,38 +96,32 @@ print(">", line_score, line)
 
 
 
-"""
 
 with open(path_file_lang, 'rb') as file_lang:
-
     content_lang = file_lang.read().decode("UTF-8")
 
     with open(path_file_entry, 'r') as file_entry:
         json_data = "".join(file_entry.readlines())
-        # print(json_data)
-
         json_entry = json.loads(json_data)
-
         json_pages = json_entry["pages"]
 
-        for x in json_pages:
-            if (x["type"]=="text"):
-                
-                pattern = "(.*)" + x["text"] + "(.*)"
-                print(" ")
-                print(pattern)
+        for json_element in json_pages:
+            if (json_element["type"]=="text"):
 
+                name_element = json_element["text"]
+                print(name_element, "\n")
+
+                pattern = "(.*)" + name_element + "(.*)"
                 results = re.search(pattern, content_lang)
                 entry = "".join(results[0].split(":")[1:])
-                print(" ")
-                print(">>>", entry)
-
-
                 entry = clean_entry(entry)
-                print(" ")
-                print(">>>", entry)
+                print(entry, "\n")
 
-"""
+                word_list = get_word_list_from_entry(entry)
+                print(word_list, "\n")
+
+
+                handle_word_list(word_list)
 
 
 
