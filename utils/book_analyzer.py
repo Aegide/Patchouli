@@ -4,35 +4,45 @@ import re
 outer_path = "C:/Github/Botania/Common/src/main/resources/assets/botania"
 
 
+lang = "en_us"
+lang = "fr_fr"
+
+
 
 chapter = "functional_flowers"
+chapter = "generating_flowers"
+
 entry = "orechid_ignem"
+entry = "hydroangeas"
+# entry = "narslimmus"
+# entry = "arcanerose"
+# entry = "rafflowsia"
 
 
 # where all the actual text is
-path_file_lang = "C:/Github/Botania/Common/src/main/resources/assets/botania/lang/fr_fr.json"
+path_file_lang = f"C:/Github/Botania/Common/src/main/resources/assets/botania/lang/{lang}.json"
 
 # full of links
 path_file_entry = f"{outer_path}/patchouli_books/lexicon/en_us/entries/{chapter}/{entry}.json"
 
 
 
-
+token_newline = "@newline@"
 
 
 max_line_score = 464
 space_score = 16
 
-value16 = "abcdeghkmnopqrsuvwxyzéèêàüûILCN"
-value14 = "t"
+value16 = "abcdeghkmnopqrsuvwxyzéèêàüûçLCNS"
 value4 = "'"
-value8 = "."
-#value12 = "fijlt"
+value8 = ".,"
+#value12 = "fijltI"
 
 
 
 def clean_entry(raw_entry):
-    clean_entry = re.sub(r"\$\([^p]*?\)", "", raw_entry)
+    updated_entry = re.sub(r"\$\(p{1}\)", token_newline, raw_entry)
+    clean_entry = re.sub(r"\$\(.*?\)", "", updated_entry)
     return clean_entry[2:-2] # removes the double-quotes
 
 
@@ -43,10 +53,10 @@ def get_word_list_from_entry(clean_entry:str):
 
     for word in word_list:
 
-        values = word.split("$(p)")
+        values = word.split(token_newline)
 
         if len(values) == 2:
-            values = [values[0], "$(p)", values[1]]
+            values = [values[0], token_newline, values[1]]
         
         elif len(values) != 1:
             print("ERROR", word, values)
@@ -71,15 +81,15 @@ def handle_word_list(word_list:list[str]):
         word_score = get_word_score(word) 
         # print(">>>", word_score, word)
 
-        if word == "$(p)":
+        if word == token_newline:
             if is_loud:
-                print(line_count, ":", line_score, ")", line)
+                print(line_count, "}", line)
 
             line = ""
             line_score = 0
             line_count += 1
             if is_loud:
-                print(line_count, ":", line_score, ")", line)
+                print(line_count, "}", line)
 
             line = ""
             line_score = 0
@@ -93,13 +103,13 @@ def handle_word_list(word_list:list[str]):
 
             else:
                 if is_loud:
-                    print(line_count, ":", line_score, ")", line)
+                    print(line_count, ")", line)
                 line = word + " "
                 line_score = word_score + space_score
                 line_count += 1
 
     if is_loud:
-        print(line_count, ":", line_score, ")", line)
+        print(line_count, "]", line)
 
 
 def get_word_score(word:str):
@@ -107,8 +117,6 @@ def get_word_score(word:str):
     for letter in word:
         if letter in value16:
             word_score += 16
-        elif letter in value14:
-            word_score += 14
         elif letter in value8:
             word_score += 8
         elif letter in value4:
@@ -136,20 +144,22 @@ with open(path_file_lang, 'rb') as file_lang:
             if (json_element["type"]=="text"):
 
                 name_element = json_element["text"]
-                print(name_element, "\n")
+                print(" ")
+                print(name_element)
+                print(" ")
 
                 pattern = "(.*)" + name_element + "(.*)"
                 results = re.search(pattern, content_lang)
                 entry = "".join(results[0].split(":")[1:])
                 entry = clean_entry(entry)
 
-                # entry = "créer. Il ne peut rien"
-
-                print(entry, "\n")
+                entry = "même si elle reste assez lente.@newline@Le pire"
+                print(entry)
+                print(" ")
 
                 word_list = get_word_list_from_entry(entry)
-                print(word_list, "\n")
-
+                print(word_list)
+                print(" ")
 
                 handle_word_list(word_list)
 
@@ -176,26 +186,7 @@ with open(path_file_lang, 'rb') as file_lang:
 # 456pxr = 12*(38)
 
 
-# max = 464 ??
+# max = 464
 
 
 
-
-# 20(m) + 12(i)
-# 19(m) + 13(i)
-# 18(m) + 14(i)
-# 17(m) + 16(i)
-# 16(m) + 17(i)
-# 15(m) + 18(i)
-
-
-
-
-"""
-
-
-some_entry = "Le jasminerai est limité dans ce qu'il peut créer. Il ne peut rien produire qui viens du Nether. Ce qui est facile à régler, en changeant un peu la recette.$(p)Le jasminerai ardent utilise du mana pour synthétiser des minerais du Nether à partir de la netherrack. Cette fleur fonctionne uniquement dans le Nether."
-
-print(" ")
-
-"""
